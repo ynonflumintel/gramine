@@ -1,0 +1,48 @@
+[loader]
+entrypoint = "file:/home/yflum/git/gramine/build/libos/src/libsysdb.so"
+log_level = "none"
+log_file = "gramine_ap1.log"
+insecure__use_cmdline_argv = true
+
+[loader.env]
+LD_LIBRARY_PATH = "/lib:/usr/local/lib/:/lib/x86_64-linux-gnu/:/host_lib/"
+
+[libos]
+entrypoint = "/bench_rocks"
+check_invalid_pointers = false
+
+[fs]
+mounts = [
+    { path = "/lib", uri = "file:/usr/local/lib/x86_64-linux-gnu/gramine/runtime/glibc" },
+    { path = "/host_lib", uri = "file:/lib/x86_64-linux-gnu" },
+    { path = "/ramfs", uri = "file:/mnt/ramfs" },
+    { path = "/usr/local/lib", uri = "file:/usr/local/lib" },
+    { path = "/home/yflum/rock" , uri = "file:/home/yflum/rock"},
+    { path = "/home/yflum/git/gramine/CI-Examples/helloworld" , uri = "file:/home/yflum/git/gramine/CI-Examples/helloworld"},
+]
+
+[sgx]
+trusted_files = [
+    { uri = "file:/usr/local/lib/x86_64-linux-gnu/gramine/libsysdb.so" },
+    { uri = "file:/usr/local/lib/x86_64-linux-gnu/gramine/runtime/glibc/" },
+    { uri = "file:/home/yflum/git/gramine/CI-Examples/helloworld/testfile" },
+    { uri = "file:/ramfs/testfile" },
+    { uri = "file:/mnt/ramfs/testfile" },
+]
+
+allowed_files = [
+    { uri = "file:/usr/local/lib/librocksdb.so.6.8"},
+    { uri = "file:bench_rocks" },
+]
+max_threads = 16
+isvprodid = 0
+isvsvn = 0
+remote_attestation = "none"
+require_avx = false
+require_avx512 = false
+require_mpx = false
+require_pkru = false
+require_amx = false
+require_exinfo = false
+enable_stats = false
+enclave_size = "256M"

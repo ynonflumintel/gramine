@@ -279,9 +279,9 @@ int get_topology_info(struct pal_topo_info* topo_info) {
     if (ret < 0)
         return ret;
     size_t nodes_cnt = 0;
-    ret = iterate_ranges_from_file("/sys/devices/system/node/possible", get_ranges_end, &nodes_cnt);
+    /*ret = iterate_ranges_from_file("/sys/devices/system/node/possible", get_ranges_end, &nodes_cnt);
     if (ret < 0)
-        return ret;
+        return ret;*/
 
     struct pal_cpu_thread_info* threads = malloc(threads_cnt * sizeof(*threads));
     size_t caches_cnt = 0;
@@ -290,9 +290,9 @@ int get_topology_info(struct pal_topo_info* topo_info) {
     struct pal_cpu_core_info* cores = malloc(threads_cnt * sizeof(*cores)); // overapproximate the count
     size_t sockets_cnt = 0;
     struct pal_socket_info* sockets = malloc(threads_cnt * sizeof(*sockets)); // overapproximate the count
-    struct pal_numa_node_info* numa_nodes = malloc(nodes_cnt * sizeof(*numa_nodes));
+    //struct pal_numa_node_info* numa_nodes = malloc(nodes_cnt * sizeof(*numa_nodes));
     size_t* distances = malloc(nodes_cnt * nodes_cnt * sizeof(*distances));
-    if (!threads || !caches || !cores || !sockets || !numa_nodes || !distances) {
+    if (!threads || !caches || !cores || !sockets || /*!numa_nodes ||*/ !distances) {
         ret = -ENOMEM;
         goto fail;
     }
@@ -306,16 +306,16 @@ int get_topology_info(struct pal_topo_info* topo_info) {
             threads[i].ids_of_caches[j] = (size_t)-1;
         }
     }
-    for (size_t i = 0; i < nodes_cnt; i++)
-        numa_nodes[i].is_online = false;
+    /*for (size_t i = 0; i < nodes_cnt; i++)
+        numa_nodes[i].is_online = false;*/
 
     ret = iterate_ranges_from_file("/sys/devices/system/cpu/online", set_thread_online, threads);
     if (ret < 0)
         goto fail;
-    ret = iterate_ranges_from_file("/sys/devices/system/node/online", set_numa_node_online,
+    /*ret = iterate_ranges_from_file("/sys/devices/system/node/online", set_numa_node_online,
                                    numa_nodes);
     if (ret < 0)
-        goto fail;
+        goto fail;*/
 
     char path[128];
     for (size_t i = 0; i < threads_cnt; i++) {
@@ -357,7 +357,7 @@ int get_topology_info(struct pal_topo_info* topo_info) {
         }
     }
 
-    for (size_t i = 0; i < nodes_cnt; i++) {
+    /*for (size_t i = 0; i < nodes_cnt; i++) {
         snprintf(path, sizeof(path), "/sys/devices/system/node/node%zu/cpulist", i);
         ret = iterate_ranges_from_file(path, set_node_id, &(struct set_node_id_args){
             .threads = threads,
@@ -376,9 +376,9 @@ int get_topology_info(struct pal_topo_info* topo_info) {
 
         /* Since our sysfs doesn't support writes, set persistent hugepages to their default value
          * of zero */
-        numa_nodes[i].nr_hugepages[HUGEPAGES_2M] = 0;
-        numa_nodes[i].nr_hugepages[HUGEPAGES_1G] = 0;
-    }
+        //numa_nodes[i].nr_hugepages[HUGEPAGES_2M] = 0;
+        //numa_nodes[i].nr_hugepages[HUGEPAGES_1G] = 0;
+    //}
 
     for (size_t i = 0; i < threads_cnt; i++) {
         if (!threads[i].is_online)
@@ -415,13 +415,13 @@ int get_topology_info(struct pal_topo_info* topo_info) {
     topo_info->caches_cnt     = caches_cnt;
     topo_info->threads_cnt    = threads_cnt;
     topo_info->cores_cnt      = cores_cnt;
-    topo_info->sockets_cnt    = sockets_cnt;
-    topo_info->numa_nodes_cnt = nodes_cnt;
+    topo_info->sockets_cnt    = 1;
+    topo_info->numa_nodes_cnt = 0;
     topo_info->caches               = caches;
     topo_info->threads              = threads;
     topo_info->cores                = cores;
     topo_info->sockets              = sockets;
-    topo_info->numa_nodes           = numa_nodes;
+    topo_info->numa_nodes           = NULL;
     topo_info->numa_distance_matrix = distances;
     return 0;
 
@@ -430,7 +430,7 @@ fail:
     free(threads);
     free(cores);
     free(sockets);
-    free(numa_nodes);
+    //free(numa_nodes);
     free(distances);
     return ret;
 }
